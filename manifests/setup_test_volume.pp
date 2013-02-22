@@ -1,36 +1,31 @@
-class cinder::setup_test_volume(
-  $volume_file     = '/var/tmp/cinder.loopback',
-  $volume_name     = 'cinder.loopback',
-  $volume_group    = 'cinder-volumes',
-  $size            = '1G',
-  $extents         = '255', #255 for 1G, 511 for 2G
-  $loopback_device = '/dev/loop0',
-  $mount_point     = '/cinder-volumes',
-) {
-
+class cinder::setup_test_volume() {
   file { "/cinder-volumes":
     ensure => directory,
     owner  => 'root',
   }
   file_line { 'fstab_volume':
     path => '/etc/fstab',
-    line => '/dev/cinder.loopback/cinder-volumes /cinder-volumes ext4 defaults 0 0',
+    line => '/dev/cinder-volumes/cinder-volumes /cinder-volumes ext4 defaults 0 0',
   }
-
-  exec { "/bin/dd if=/dev/zero of=${volume_file} bs=1 count=0 seek=${size}":
-    creates => "${volume_file}",
-    unless => "/sbin/vgdisplay ${volume_name}",
+  exec { "/bin/dd if=/dev/zero of=/var/tmp/cinder.loopback bs=1 count=0 seek=1G":
+    creates => "/var/tmp/cinder.loopback",
   } ~>
-  exec { "/sbin/losetup ${loopback_device} ${volume_file}":
-    subscribe   => File["/cinder-volumes"],
+  exec { "/sbin/losetup /dev/loop0 /var/tmp/cinder.loopback":
+    unless => "/sbin/losetup /dev/loop0",
   } ~>
-  exec { "/sbin/pvcreate ${loopback_device}": } ~>
-  exec { "/sbin/vgcreate ${volume_name} ${loopback_device}": } ~>
-  exec { "/sbin/lvcreate -l ${extents} -n ${volume_group} ${volume_name}":
-    unless => "/sbin/lvdisplay ${volume_group}",
+  exec { "/sbin/pvcreate /dev/loop0": 
+    unless => "/sbin/pvdisplay /dev/loop0",
   } ~>
-  exec { "/sbin/mkfs.ext4 /dev/${volume_name}/${volume_group}": } ~>
-  exec { "/bin/mount /dev/${volume_name}/${volume_group} ${mount_point}":
+  exec { "/sbin/vgcreate cinder-volumes /dev/loop0": 
+    unless => "/sbin/vgdisplay cinder-volumes",
+  } ~>
+  exec { "/sbin/lvcreate -l 255 -n cinder-volumes cinder-volumes":
+  } ~>
+  exec { "/sbin/mkfs.ext4 /dev/cinder-volumes/cinder-volumes": 
+    refreshonly => true,
+  } ~>
+  exec { "/bin/mount /dev/cinder-volumes/cinder-volumes /cinder-volumes":
+    unless => "/bin/df -T | /bin/grep cinder",
     require     => File['/cinder-volumes'],
   }
 }
