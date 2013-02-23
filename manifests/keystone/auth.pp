@@ -1,5 +1,6 @@
 class cinder::keystone::auth (
   $password,
+  $enabled             = true,
   $auth_name          = 'cinder',
   $email              = 'cinder@localhost',
   $tenant             = 'services',
@@ -12,21 +13,26 @@ class cinder::keystone::auth (
   $volume_version     = 'v1',
   $region             = 'RegionOne'
 ) {
+  if $enabled {
+    $ensure = present
+  } else {
+    $ensure = absent
+  }
 
   Keystone_user_role["${auth_name}@${tenant}"] ~> Service <| name == 'cinder-api' |>
 
   keystone_user { $auth_name:
-    ensure   => present,
+    ensure   => $ensure,
     password => $password,
     email    => $email,
     tenant   => $tenant,
   }
   keystone_user_role { "${auth_name}@${tenant}":
-    ensure  => present,
+    ensure  => $ensure,
     roles   => 'admin',
   }
   keystone_service { $auth_name:
-    ensure      => present,
+    ensure      => $ensure,
     type        => $service_type,
     description => "Cinder Service",
   }
