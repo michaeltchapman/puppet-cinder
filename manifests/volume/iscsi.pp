@@ -28,6 +28,12 @@ class cinder::volume::iscsi (
           require => Package['tgt'],
           notify => Service['tgtd'],
         }
+      } elsif($::osfamily == 'Debian') {
+        file{ '/etc/tgt/conf.d/cinder.conf':
+          content => "include /etc/cinder/volumes/*",
+          require => Package['tgt'],
+          notify => Service['tgtd'],
+        }
       }
 
       service { 'tgtd':
