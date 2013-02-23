@@ -38,8 +38,9 @@ class cinder::keystone::auth (
   }
 
   if $configure_endpoint {
-    keystone_endpoint { "${region}/$auth_name":
-      ensure       => present,
+    keystone_endpoint { $auth_name:
+      ensure       => $ensure,
+      region       => $region,
       public_url   => "http://${public_address}:${port}/${volume_version}/%(tenant_id)s",
       admin_url    => "http://${admin_address}:${port}/${volume_version}/%(tenant_id)s",
       internal_url => "http://${internal_address}:${port}/${volume_version}/%(tenant_id)s",
