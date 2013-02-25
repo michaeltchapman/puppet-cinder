@@ -2,7 +2,8 @@
 class cinder::volume::iscsi (
   $iscsi_ip_address,
   $volume_group      = 'cinder-volumes',
-  $iscsi_helper      = 'tgtadm'
+  $iscsi_helper      = 'tgtadm',
+  $state_path             = '/var/lib/cinder',
 ) {
 
   include cinder::params
@@ -23,14 +24,14 @@ class cinder::volume::iscsi (
       if($::osfamily == 'RedHat') {
         file_line { 'cinder include':
           path => '/etc/tgt/targets.conf',
-          line => "include /etc/cinder/volumes/*",
+          line => "include /${state_path}/volumes/*",
           match => '#?include /',
           require => Package['tgt'],
           notify => Service['tgtd'],
         }
       } elsif($::osfamily == 'Debian') {
         file{ '/etc/tgt/conf.d/cinder.conf':
-          content => "include /etc/cinder/volumes/*",
+          content => "include /${state_path}/volumes/*",
           require => Package['tgt'],
           notify => Service['tgtd'],
         }

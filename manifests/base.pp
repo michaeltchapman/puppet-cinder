@@ -11,7 +11,8 @@ class cinder::base (
   $rabbit_virtual_host    = '/',
   $rabbit_userid          = 'nova',
   $package_ensure         = 'present',
-  $verbose                = 'False'
+  $verbose                = 'False',
+  $state_path             = '/var/lib/cinder',
 ) {
 
   include cinder::params
@@ -51,6 +52,7 @@ class cinder::base (
     'DEFAULT/sql_connection':      value => $sql_connection;
     'DEFAULT/verbose':             value => $verbose;
     'DEFAULT/api_paste_config':    value => '/etc/cinder/api-paste.ini';
+    'DEFAULT/state_path':          value => '/var/lib/cinder';
   }
 
 }
