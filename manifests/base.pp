@@ -1,6 +1,5 @@
 #
 # parameters that may need to be added
-# $state_path = /opt/stack/data/cinder
 # $osapi_volume_extension = cinder.api.openstack.volume.contrib.standard_extensions
 # $root_helper = sudo /usr/local/bin/cinder-rootwrap /etc/cinder/rootwrap.conf
 class cinder::base (
@@ -11,7 +10,8 @@ class cinder::base (
   $rabbit_virtual_host    = '/',
   $rabbit_userid          = 'nova',
   $package_ensure         = 'present',
-  $verbose                = 'False'
+  $verbose                = 'False',
+  $state_path             = '/var/lib/cinder',
 ) {
 
   include cinder::params
@@ -32,7 +32,10 @@ class cinder::base (
     require => Package[$::cinder::params::package_name],
   }
 
-  file { $::cinder::params::cinder_conf: }
+  file { $::cinder::params::cinder_conf:
+    mode => '0600',
+  }
+
   file { $::cinder::params::cinder_paste_api_ini: }
 
   # Temporary fixes
@@ -51,6 +54,7 @@ class cinder::base (
     'DEFAULT/sql_connection':      value => $sql_connection;
     'DEFAULT/verbose':             value => $verbose;
     'DEFAULT/api_paste_config':    value => '/etc/cinder/api-paste.ini';
+    'DEFAULT/state_path':          value => '/var/lib/cinder';
   }
 
 }
